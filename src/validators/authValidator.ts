@@ -19,7 +19,7 @@ export const verifyOtpSchema = z.object({
       }),
     otp: z
       .string({ required_error: 'OTP is required' })
-      .length(6, { message: 'OTP must be exactly 6 digits' })
+      .length(4, { message: 'OTP must be exactly 4 digits' })
       .regex(/^\d+$/, { message: 'OTP must contain only digits' }),
   }),
 });

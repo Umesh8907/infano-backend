@@ -17,7 +17,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
       return next(new NotFoundError('User not found in request'));
     }
 
-    const { name, age, onboarding_profile } = req.body;
+    const { name, dob, onboarding_profile } = req.body;
 
     // Find the user
     const user = await User.findById(userId);
@@ -27,7 +27,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 
     // Update basic fields if provided
     if (name !== undefined) user.name = name;
-    if (age !== undefined) user.age = age;
+    if (dob !== undefined) user.dob = new Date(dob);
 
     // Update onboarding profile if provided
     if (onboarding_profile) {
@@ -38,6 +38,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         health_conditions,
         birth_control_type,
         health_goals,
+        typical_moods,
+        typical_symptoms,
         onboarding_completed,
         tracker_setup_completed
       } = onboarding_profile;
@@ -48,6 +50,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
       if (health_conditions !== undefined) user.onboarding_profile.health_conditions = health_conditions;
       if (birth_control_type !== undefined) user.onboarding_profile.birth_control_type = birth_control_type;
       if (health_goals !== undefined) user.onboarding_profile.health_goals = health_goals;
+      if (typical_moods !== undefined) user.onboarding_profile.typical_moods = typical_moods;
+      if (typical_symptoms !== undefined) user.onboarding_profile.typical_symptoms = typical_symptoms;
       
       // Update completion flags
       if (onboarding_completed !== undefined) {
@@ -74,9 +78,10 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
           id: user._id,
           phone: user.phone,
           name: user.name,
-          age: user.age,
+          dob: user.dob,
           avatar_url: user.avatar_url,
           tier: user.tier,
+          onboarding_profile: user.onboarding_profile,
           onboarding_completed: user.onboarding_profile.onboarding_completed,
           tracker_setup_completed: user.onboarding_profile.tracker_setup_completed,
         },

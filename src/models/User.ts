@@ -7,6 +7,8 @@ export interface IOnboardingProfile {
   health_conditions: string[];
   birth_control_type: string;
   health_goals: string[];
+  typical_moods: string[];
+  typical_symptoms: string[];
   onboarding_completed: boolean;
   tracker_setup_completed: boolean;
   completed_at?: Date;
@@ -22,7 +24,7 @@ export interface INotificationPreferences {
 export interface IUser extends Document {
   name?: string;
   phone: string; // Unique primary identity
-  age?: number;
+  dob?: Date;
   avatar_url?: string;
   tier: 'free' | 'plus' | 'pro';
   subscription_id?: string;
@@ -41,6 +43,8 @@ const OnboardingProfileSchema = new Schema<IOnboardingProfile>({
   health_conditions: { type: [String], default: [] },
   birth_control_type: { type: String, default: 'none' },
   health_goals: { type: [String], default: [] },
+  typical_moods: { type: [String], default: [] },
+  typical_symptoms: { type: [String], default: [] },
   onboarding_completed: { type: Boolean, default: false },
   tracker_setup_completed: { type: Boolean, default: false },
   completed_at: { type: Date },
@@ -56,7 +60,7 @@ const NotificationPreferencesSchema = new Schema<INotificationPreferences>({
 const UserSchema = new Schema<IUser>({
   name: { type: String, trim: true },
   phone: { type: String, required: true, unique: true, index: true },
-  age: { type: Number },
+  dob: { type: Date },
   avatar_url: { type: String },
   tier: { type: String, enum: ['free', 'plus', 'pro'], default: 'free' },
   subscription_id: { type: String },

@@ -23,8 +23,8 @@ export const sendOTP = async (req: Request, res: Response, next: NextFunction): 
   try {
     const { phone } = req.body;
 
-    // Generate a mock 6-digit OTP (e.g., 123456 or random)
-    const generatedOtp = '123456'; 
+    // Generate a mock 4-digit OTP (e.g., 1234 or random)
+    const generatedOtp = '1234'; 
     otpCache.set(phone, generatedOtp);
 
     // Securely log the generated code to backend console for validation
@@ -50,8 +50,8 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
   try {
     const { phone, otp } = req.body;
 
-    // The mock rule: literally ANY 6-digit OTP will be validated and accepted
-    // (Zod schema has already checked that it is a 6-digit numeric string).
+    // The mock rule: literally ANY 4-digit OTP will be validated and accepted
+    // (Zod schema has already checked that it is a 4-digit numeric string).
     logger.info(`[SMS MOCK] Verifying OTP ${otp} for phone ${phone}. Validated successfully.`);
 
     // Find or create user
@@ -109,9 +109,10 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
           id: user._id,
           phone: user.phone,
           name: user.name,
-          age: user.age,
+          dob: user.dob,
           avatar_url: user.avatar_url,
           tier: user.tier,
+          onboarding_profile: user.onboarding_profile,
           onboarding_completed: user.onboarding_profile.onboarding_completed,
           tracker_setup_completed: user.onboarding_profile.tracker_setup_completed,
         },
