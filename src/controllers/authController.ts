@@ -69,6 +69,7 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
           birth_control_type: 'none',
           health_goals: [],
           onboarding_completed: false,
+          tracker_setup_completed: false,
         },
         notification_preferences: {
           period_reminder: true,
@@ -112,6 +113,7 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
           avatar_url: user.avatar_url,
           tier: user.tier,
           onboarding_completed: user.onboarding_profile.onboarding_completed,
+          tracker_setup_completed: user.onboarding_profile.tracker_setup_completed,
         },
       },
     });

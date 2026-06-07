@@ -5,10 +5,14 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const redisClient = createClient({
   url: REDIS_URL,
+  socket: {
+    reconnectStrategy: false, // Do not auto-reconnect if it fails
+  }
 });
 
 redisClient.on('error', (err) => {
-  logger.warn(`Redis client error: ${err.message}`);
+  // Suppress verbose reconnect errors to prevent console spam when Redis is offline.
+  // The initial connection failure is cleanly caught and logged by connectRedis().
 });
 
 let isRedisConnected = false;

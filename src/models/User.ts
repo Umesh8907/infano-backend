@@ -8,6 +8,7 @@ export interface IOnboardingProfile {
   birth_control_type: string;
   health_goals: string[];
   onboarding_completed: boolean;
+  tracker_setup_completed: boolean;
   completed_at?: Date;
 }
 
@@ -41,6 +42,7 @@ const OnboardingProfileSchema = new Schema<IOnboardingProfile>({
   birth_control_type: { type: String, default: 'none' },
   health_goals: { type: [String], default: [] },
   onboarding_completed: { type: Boolean, default: false },
+  tracker_setup_completed: { type: Boolean, default: false },
   completed_at: { type: Date },
 }, { _id: false });
 

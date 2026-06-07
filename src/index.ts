@@ -16,6 +16,7 @@ import gigiRoutes from './routes/gigiRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import learningRoutes from './routes/learningRoutes';
+import userRoutes from './routes/userRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import { protect, restrictTo } from './middlewares/auth';
 
@@ -63,6 +64,7 @@ app.use('/api', apiLimiter);
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/community', communityRoutes);
 app.use('/api/v1/gigi', gigiRoutes);
