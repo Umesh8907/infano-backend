@@ -9,7 +9,7 @@ dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/infano';
 
-const createActivityList = (episodeNum: number): IActivity[] => {
+const createActivityList = (episodeNum: number, episodeTitle: string): IActivity[] => {
   return [
     {
       _id: new Types.ObjectId(),
@@ -19,10 +19,15 @@ const createActivityList = (episodeNum: number): IActivity[] => {
       is_required: true,
       estimated_minutes: 2,
       payload: {
-        video_url: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-cup-of-tea-in-bed-41865-large.mp4',
+        video_url: 'https://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8',
         thumbnail_url: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e',
         duration_seconds: 90,
-        caption: `Welcome to Episode ${episodeNum}!`
+        caption: `Welcome to ${episodeTitle}!`,
+        facts: [
+          "Understanding your body's rhythm can increase energy levels by up to 20%.",
+          "Your cycle is a vital sign, just like your heart rate and blood pressure.",
+          "Over 80% of women report feeling more empowered after tracking their daily symptoms."
+        ]
       }
     },
     {
@@ -175,153 +180,82 @@ export const seedLearningData = async () => {
     logger.info('Cleared existing journeys, episodes, and badges.');
 
     // 1. Create Badges
-    const badge1 = await Badge.create({
-      name: 'Adolescent Journey Champion',
-      description: 'Completed the full "My Body, My Story" Learning Journey.',
+    const badge = await Badge.create({
+      name: 'Journey Champion',
+      description: 'Completed a Learning Journey.',
       image_url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
       type: 'journey_completion',
-      criteria: { journey_slug: 'my-body-my-story' }
+      criteria: { type: 'any' }
     });
-
-    const badge2 = await Badge.create({
-      name: 'Adult Cycle Expert',
-      description: 'Completed the full "Understanding Your Cycle" Learning Journey.',
-      image_url: 'https://images.unsplash.com/photo-1579546929662-711aa81148cf',
-      type: 'journey_completion',
-      criteria: { journey_slug: 'understanding-your-cycle' }
-    });
-
     logger.info('Created Badges.');
 
-    // 2. Create Journey 1
-    const journey1 = await Journey.create({
-      title: 'My Body, My Story',
-      slug: 'my-body-my-story',
-      description: 'A friendly guide to adolescent menstrual health. Learn about what is happening in your body and how to own your story.',
-      cover_image_url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74',
-      category: 'adolescent',
-      target_audience: ['13-18'],
-      tier_required: 'free',
-      completion_badge_id: badge1._id,
-      estimated_hours: 1.5,
-      is_featured: true,
-      language: 'en',
-      status: 'published',
-      total_xp: 300
-    });
+    const journeyData = [
+      { title: 'My Body, My Story', slug: 'my-body-my-story', desc: 'A foundational guide to your body.', category: 'adolescent', cover: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74' },
+      { title: 'Understanding Your Cycle', slug: 'understanding-your-cycle', desc: 'A comprehensive guide to the adult menstrual cycle.', category: 'menstrual_health', cover: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773' },
+      { title: 'Nutrition & Cycle Health', slug: 'nutrition-and-cycle', desc: 'How to nourish your body across the four phases.', category: 'nutrition', cover: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061' },
+      { title: 'Fertility & Conception', slug: 'fertility-conception', desc: 'Basics of tracking ovulation and fertility awareness.', category: 'reproductive', cover: 'https://images.unsplash.com/photo-1518152006812-edab29b069ac' },
+      { title: 'Navigating Menopause', slug: 'navigating-menopause', desc: 'Preparing for and managing perimenopause transitions.', category: 'reproductive', cover: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2' }
+    ];
 
-    // Create episodes for Journey 1
-    const j1e1 = await Episode.create({
-      journey_id: journey1._id,
-      order: 1,
-      title: 'What is Menstruation?',
-      description: 'An introduction to puberty, cycles, and what to expect.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: true,
-      pass_threshold: 0.70,
-      activities: createActivityList(1),
-      status: 'published'
-    });
+    for (let i = 0; i < journeyData.length; i++) {
+      const data = journeyData[i];
+      const isFirst = (i === 0);
 
-    const j1e2 = await Episode.create({
-      journey_id: journey1._id,
-      order: 2,
-      title: 'Tracking Your First Cycle',
-      description: 'Learn how to count cycle days and log symptoms.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: true,
-      pass_threshold: 0.70,
-      activities: createActivityList(2),
-      status: 'published'
-    });
+      const journey = await Journey.create({
+        title: data.title,
+        slug: data.slug,
+        description: data.desc,
+        cover_image_url: data.cover,
+        category: data.category,
+        target_audience: ['13-35'],
+        tier_required: 'plus', // ALL journeys are premium
+        completion_badge_id: badge._id,
+        estimated_hours: 1.5,
+        is_featured: isFirst, // First journey featured
+        language: 'en',
+        status: 'published',
+        total_xp: 300,
+        // use created_at to force sorting arrangement: newest first (so index 0 is newest)
+        created_at: new Date(Date.now() - i * 100000) 
+      });
 
-    const j1e3 = await Episode.create({
-      journey_id: journey1._id,
-      order: 3,
-      title: 'Period Symptoms & Care',
-      description: 'How to manage cramps, bloating, and practice self-care.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: false, // Premium gate
-      pass_threshold: 0.70,
-      activities: createActivityList(3),
-      status: 'published'
-    });
+      const episodeNames = [
+        ['The Basics of Your Body', 'Hormonal Rhythms', 'Building Healthy Habits'],
+        ['Cycle Phases Explained', 'Tracking Your Symptoms', 'Emotional Wellness'],
+        ['Nutritional Needs', 'Handling Cravings', 'Supplements & You'],
+        ['Ovulation 101', 'Timing and Conception', 'Preconception Health'],
+        ['Perimenopause Signs', 'Managing Symptoms', 'Long-term Vitality']
+      ];
 
-    journey1.episode_ids = [j1e1._id as Types.ObjectId, j1e2._id as Types.ObjectId, j1e3._id as Types.ObjectId];
-    await journey1.save();
-    logger.info('Journey 1 ("My Body, My Story") seeded successfully with 3 episodes.');
+      const episodeIds = [];
+      for (let ep = 1; ep <= 3; ep++) {
+        // ONLY the first journey's first two episodes are free
+        const isFree = isFirst && (ep === 1 || ep === 2);
+        
+        const epTitle = episodeNames[i]?.[ep - 1] || `Episode ${ep}`;
 
-    // 3. Create Journey 2
-    const journey2 = await Journey.create({
-      title: 'Understanding Your Cycle',
-      slug: 'understanding-your-cycle',
-      description: 'A comprehensive, science-backed guide to the adult menstrual cycle, hormone fluctuations, and wellness tips.',
-      cover_image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773',
-      category: 'menstrual_health',
-      target_audience: ['18-35'],
-      tier_required: 'plus', // Journey tier required
-      completion_badge_id: badge2._id,
-      estimated_hours: 1.5,
-      is_featured: false,
-      language: 'en',
-      status: 'published',
-      total_xp: 300
-    });
+        const episode = await Episode.create({
+          journey_id: journey._id,
+          order: ep,
+          title: epTitle,
+          description: `Learn the key concepts for: ${epTitle}.`,
+          thumbnail_url: data.cover,
+          duration_minutes: 20,
+          total_xp: 100,
+          is_free: isFree,
+          pass_threshold: 0.70,
+          activities: createActivityList(ep, epTitle),
+          status: 'published'
+        });
+        episodeIds.push(episode._id);
+      }
 
-    // Create episodes for Journey 2
-    const j2e1 = await Episode.create({
-      journey_id: journey2._id,
-      order: 1,
-      title: 'Hormones & Phases',
-      description: 'Understanding estrogen, progesterone, and the four phases.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: true, // Overrides journey tier for first 2 episodes
-      pass_threshold: 0.70,
-      activities: createActivityList(1),
-      status: 'published'
-    });
+      journey.episode_ids = episodeIds as any;
+      await journey.save();
+      logger.info(`Seeded Journey ${i + 1}: ${data.title} (${isFirst ? 'First 2 Eps Free' : 'All Paid'})`);
+    }
 
-    const j2e2 = await Episode.create({
-      journey_id: journey2._id,
-      order: 2,
-      title: 'Ovulation & Fertility',
-      description: 'Learn about the fertile window, egg release, and predictions.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1518152006812-edab29b069ac',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: true, // Overrides journey tier
-      pass_threshold: 0.70,
-      activities: createActivityList(2),
-      status: 'published'
-    });
-
-    const j2e3 = await Episode.create({
-      journey_id: journey2._id,
-      order: 3,
-      title: 'Managing Irregular Cycles',
-      description: 'When standard calculations fail, and how to identify patterns.',
-      thumbnail_url: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7',
-      duration_minutes: 20,
-      total_xp: 100,
-      is_free: false,
-      pass_threshold: 0.70,
-      activities: createActivityList(3),
-      status: 'published'
-    });
-
-    journey2.episode_ids = [j2e1._id as Types.ObjectId, j2e2._id as Types.ObjectId, j2e3._id as Types.ObjectId];
-    await journey2.save();
-    logger.info('Journey 2 ("Understanding Your Cycle") seeded successfully with 3 episodes.');
-
-    logger.info('Learning Journey data seeded successfully!');
+    logger.info('Learning Journey data seeded successfully! 5 Journeys created.');
   } catch (error: any) {
     logger.error(`Failed to seed learning content: ${error.message}`);
     throw error;

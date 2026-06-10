@@ -79,13 +79,18 @@ const isEpisodeLockedByTier = (userTier: 'free' | 'plus' | 'pro', episode: any):
 export const getJourneys = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    if (!userId) return next(new ValidationError('Auth required'));
+    if (!userId) {
+      console.error('[LearningController] getJourneys: Missing auth userId');
+      return next(new ValidationError('Auth required'));
+    }
 
     const { category, tier } = req.query;
     const filter: any = { status: 'published' };
 
     if (category) filter.category = category;
     if (tier) filter.tier_required = tier;
+
+    console.log(`[LearningController] Fetching journeys for userId: ${userId}, filter:`, filter);
 
     const journeys = await Journey.find(filter).sort({ created_at: -1 }).exec();
     const userTier = req.user?.tier || 'free';
@@ -114,11 +119,14 @@ export const getJourneys = async (req: Request, res: Response, next: NextFunctio
       };
     }));
 
+    console.log(`[LearningController] Successfully fetched ${results.length} journeys.`);
+
     res.status(200).json({
       status: 'success',
       data: results
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[LearningController] Error in getJourneys:', error.message);
     return next(error);
   }
 };
@@ -180,7 +188,9 @@ export const getJourneyDetail = async (req: Request, res: Response, next: NextFu
       return {
         episode: ep,
         status,
-        locked_reason: lockedReason
+        locked_reason: lockedReason,
+        completed_activities: progressEntry ? progressEntry.activity_progress.filter((a: any) => a.status === 'completed').length : 0,
+        total_activities: ep.activities ? ep.activities.length : 0
       };
     });
 
@@ -188,7 +198,11 @@ export const getJourneyDetail = async (req: Request, res: Response, next: NextFu
       status: 'success',
       data: {
         journey,
-        episodes: episodeResults
+        episodes: episodeResults,
+        user_progress: progress ? {
+          total_xp_earned: progress.total_xp_earned,
+          status: progress.status
+        } : null
       }
     });
   } catch (error) {
@@ -249,7 +263,8 @@ export const getEpisodeDetail = async (req: Request, res: Response, next: NextFu
       data: {
         episode,
         activities: episode.activities,
-        user_activity_progress: progressEntry ? progressEntry.activity_progress : []
+        user_activity_progress: progressEntry ? progressEntry.activity_progress : [],
+        total_xp_earned: progress ? progress.total_xp_earned : 0
       }
     });
   } catch (error) {
@@ -417,8 +432,8 @@ export const completeActivity = async (req: Request, res: Response, next: NextFu
       // 30-second assessment cooldown check
       if (epProgress.last_assessment_attempt_at) {
         const secondsSinceLast = (Date.now() - new Date(epProgress.last_assessment_attempt_at).getTime()) / 1000;
-        if (secondsSinceLast < 30) {
-          return next(new ForbiddenError('Assessment cooldown active. Please wait 30 seconds before retrying.'));
+        if (secondsSinceLast < 3) {
+          return next(new ForbiddenError('Assessment cooldown active. Please wait 3 seconds before retrying.'));
         }
       }
 
